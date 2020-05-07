@@ -1,0 +1,10 @@
+
+server {
+       listen 80;
+       server_name {{ directory_name }}.site;
+       set $MAGE_ROOT {{ proj_path}};
+       set $MAGE_MODE developer;
+       include {{ proj_path }}/nginx.conf.sample;
+}
+
+

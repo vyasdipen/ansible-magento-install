@@ -1,0 +1,140 @@
+# Author:  Dipen Vyas
+# Email:  vyasdipen@live.com
+# Version: 1.0# Install Magento
+---
+ - name: Welcome to Magento Installation
+   hosts: localhost
+   vars_prompt:
+
+    - name: proj_name
+      prompt: "Enter Project name"
+    
+    - name: magento_version
+      prompt:  "Please enter magento version you would like to install?"
+      default: "2.3.5"
+
+    - name: db_name
+      prompt: "Enter Database name"
+
+    - name: db_user
+      prompt: "Enter Database user"
+
+    - name:  db_password
+      prompt: "Enter Database Password"       
+    
+   vars:
+      proj_url: "http://{{ proj_name }}.site/"
+      directory_name: "{{ proj_name }}"   
+      db_host: 127.0.0.1
+      proj_path: "/var/www/html/{{ proj_name }}"
+
+   tasks:
+   - name: check if DB exists or not (You will be prompt for the password again)
+     shell: mysql -u {{ db_user }} {{ db_name }} -p
+     register: dbstatus
+     failed_when: dbstatus.rc != 0
+    
+   - name: Get values
+     debug:
+      msg: "{{ proj_name }} {{ proj_url }}"
+ 
+   - name: Checking Project folder exists at give path or not.
+     stat:
+      path: "{{ proj_path }}"
+     register: files_to_delete
+
+   - debug:
+       msg: "Folder already exists"
+     when: files_to_delete.stat.exists and files_to_delete.stat.isdir
+   
+   - name: Creating a project folder
+     file:
+      path: "{{ proj_path }}"
+      state: directory
+      mode: 0755
+     when: files_to_delete.stat.exists == false   
+
+   - name: Setting entry in /etc/hosts file
+     lineinfile:
+       path: /etc/hosts
+       line: "127.0.0.1 {{ proj_name }}.site"
+     register: hosts_entry
+     become: yes
+     ignore_errors: yes
+   
+   - name: if host entry does not exist create new
+     debug:
+      var: hosts_entry    
+  
+
+   - name: Check composer is installed or not
+     command: 'which composer' 
+     register: composer_installed
+     failed_when:  composer_installed.rc == 1
+     ignore_errors: yes
+   
+   - name:  Install magento using composer
+     block:
+      - composer:
+         command: create-project
+         arguments: --repository-url=https://repo.magento.com/ magento/project-community-edition={{ magento_version }} {{ proj_path }}
+         working_dir: /var/www/html/{{ proj_name }}
+      
+      - name: Setting Magento File Permission
+        file:
+          path: "{{ proj_path }}"
+          state: directory
+          mode: 0755
+      
+      - name: Installing Magento
+        shell: bin/magento setup:install --base-url={{ proj_url }} --db-host={{ db_host }} --db-name={{ proj_name }} --db-user={{ db_user }} --db-password={{ db_password }} --admin-firstname=admin --admin-lastname=admin --admin-email=testing@blueacorn.com --admin-user=admin --admin-password=admin@123 --language=en_US --currency=USD --timezone=America/Chicago --use-rewrites=1
+        args:
+          chdir: "{{ proj_path }}"
+         
+     when: composer_installed.rc != 1    
+
+   - name: Check nginx configuration with same name exist
+     stat:
+         path: /etc/nginx/sites-available/{{ proj_name }}
+     register: stat_result
+
+   - set_fact:
+           proj_name: "{{ proj_name }}_first.site" 
+     when: stat_result.stat.exists != false
+
+   - name: Copy nginx configuration
+     template:
+      src: "m2com.j2"
+      dest: "/etc/nginx/sites-available/{{ proj_name }}"
+     become: yes
+          
+   - name: Create a symlink in nginx site-enabled folder 
+     file:
+      src: "/etc/nginx/sites-available/{{ proj_name }}"
+      dest: "/etc/nginx/sites-enabled/{{ proj_name }}"
+      state: link
+     become: yes
+
+   - name: restart nginx
+     service:
+        name: nginx
+        state: restarted
+     become: yes
+
+   - name: Deploy Magento Permission
+     shell:
+          cmd: chmod -R 777 *
+          warn: false
+     args:
+          chdir: "{{ proj_path }}"
+
+   - name: Installation done
+     debug:  
+      msg: "Installation has been completed.  Site url: {{ proj_url }}"
+
+   - name: Launching the Site
+     command: google-chrome {{ proj_url }} -incognito 
+     ignore_errors: yes
+
+           
+   
