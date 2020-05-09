@@ -23,7 +23,7 @@ Or you can also try to access it using  `projectname.site`
 
 3. run following command 
 	```sh
-	ansible-playbook test.yml  --ask-become-pass
+	ansible-playbook magento2.yml  --ask-become-pass
 	```
 
 4.  I recommend to run it with argument  `--ask-become-pass` to prevent script failure and handle sudo privilages. 
