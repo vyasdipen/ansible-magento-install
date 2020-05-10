@@ -1,9 +1,8 @@
-# Ansible Magento 2 Install on Nginx
+# Ansible - Install Magento 2 on Nginx
 
-This ansbile script works for Nginx only. It will allows you to setup magento2 community edition on system. It will reduce manual efforts to install fresh magento 2 on your local system. Once installation will be done, link will open in google chrome.
+This ansbile script works for Nginx only. It will allows you to setup magento2 community edition on system. It will reduce manual efforts to install fresh magento 2 on your local system. Once installation will be done, link will open in google chrome or you can also try to access it using  `projectname.site`. 
 
-Or you can also try to access it using  `projectname.site`  
-
+This is just a basic script for Nginx. 
 
 ## System Requirments
 
