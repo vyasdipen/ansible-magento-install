@@ -31,7 +31,7 @@ This is just a basic script for Nginx.
 
 ## Troubleshoot
 
-1. Instad of running it through with sudo, I recommend run it using argument "--ask-become-pass"  
+1. Instad of running it using sudo command, I recommend run it using argument "--ask-become-pass"  
 2. Can not connect to localhost: 
 Ans:  In that case  you need to enter the host entry in to the ansible host file.To do so, edit /etc/ansible/hosts file or create new inventory file in ansible directory.  Add following entry and save the file.
 
